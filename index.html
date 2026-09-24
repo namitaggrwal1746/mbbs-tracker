@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MBBS Bridge Course Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef3f5; --sidebar:#ffffff; --card:#ffffff; --text:#1f2933; --sub:#6b7684;
+  --accent:#5b8a8a; --accent2:#e3a96b; --sage:#7fa88c; --border:#e2e8ec;
+  --shadow:0 8px 24px rgba(31,41,51,.08); --shadow-sm:0 2px 8px rgba(31,41,51,.06);
+  --done-bg:#eaf5ee; --danger:#e07a5f; --chip:#f2f6f7; --hero:#ffffff;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14161a; --sidebar:#1b1e24; --card:#1e2127; --text:#e7ebee; --sub:#93a0ac;
+    --accent:#7fb0b0; --accent2:#e8b57e; --sage:#8fc09e; --border:#2a2e35;
+    --shadow:0 8px 24px rgba(0,0,0,.4); --shadow-sm:0 2px 8px rgba(0,0,0,.35);
+    --done-bg:#1c2a22; --chip:#23262c; --hero:#1b1e24;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14161a; --sidebar:#1b1e24; --card:#1e2127; --text:#e7ebee; --sub:#93a0ac;
+  --accent:#7fb0b0; --accent2:#e8b57e; --sage:#8fc09e; --border:#2a2e35;
+  --shadow:0 8px 24px rgba(0,0,0,.4); --shadow-sm:0 2px 8px rgba(0,0,0,.35);
+  --done-bg:#1c2a22; --chip:#23262c; --hero:#1b1e24;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,Segoe UI,Roboto,sans-serif;
+  min-height:100%; display:flex; flex-direction:column;}
+
+header{padding:12px 20px calc(10px + env(safe-area-inset-top,0px));
+  background:var(--sidebar); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:30;
+  display:flex; justify-content:space-between; align-items:center; gap:10px;}
+.brand h1{font-size:1rem; font-weight:800; margin:0;}
+.brand .tag{font-size:.7rem; color:var(--sub); font-weight:500;}
+.headright{display:flex; align-items:center; gap:12px;}
+.mini-progress{width:120px;}
+.progress-wrap{background:var(--border); border-radius:20px; height:8px; overflow:hidden;}
+.progress-bar{height:100%; background:linear-gradient(90deg,var(--sage),var(--accent)); width:0%; transition:width .5s ease;}
+.progress-num{font-size:.68rem; color:var(--sub); margin-top:3px; text-align:right;}
+.iconbtn{border:1px solid var(--border); background:var(--card); color:var(--text); border-radius:14px;
+  width:36px; height:36px; cursor:pointer; font-size:1rem; flex-shrink:0;}
+
+.shell{display:flex; flex:1; min-height:0;}
+nav.sidebar{width:170px; flex-shrink:0; background:var(--sidebar); border-right:1px solid var(--border);
+  overflow-y:auto; padding:10px;}
+.daytab{display:flex; justify-content:space-between; align-items:center; width:100%; text-align:left; border:none;
+  background:transparent; color:var(--text); padding:10px 12px; border-radius:12px; font-size:.85rem;
+  font-weight:500; cursor:pointer; margin-bottom:4px;}
+.daytab:hover{background:var(--chip);}
+.daytab.active{background:var(--accent); color:#fff; font-weight:700;}
+main{flex:1; padding:20px; overflow-y:auto;}
+
+/* HERO TIMER */
+.hero{background:var(--hero); border:1px solid var(--border); border-radius:28px; padding:28px 24px;
+  text-align:center; box-shadow:var(--shadow); margin-bottom:26px;}
+.hero .mode{font-size:.85rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--accent);
+  margin-bottom:6px;}
+.hero .time{font-size:5.5rem; font-weight:800; letter-spacing:2px; line-height:1; margin:4px 0 14px;
+  font-variant-numeric:tabular-nums;}
+.hero .btns{display:flex; gap:10px; justify-content:center; margin-bottom:20px; flex-wrap:wrap;}
+.hero button.main-btn{border:none; background:var(--accent); color:#fff; border-radius:16px; padding:12px 28px;
+  font-size:1rem; font-weight:700; cursor:pointer;}
+.hero button.alt-btn{border:none; background:var(--chip); color:var(--text); border-radius:16px; padding:12px 22px;
+  font-size:.95rem; font-weight:600; cursor:pointer;}
+.durations{display:flex; gap:24px; justify-content:center; flex-wrap:wrap;}
+.dur-ctrl{display:flex; align-items:center; gap:8px; background:var(--chip); border-radius:14px; padding:8px 12px;}
+.dur-ctrl .dlabel{font-size:.72rem; color:var(--sub); font-weight:700; text-transform:uppercase;}
+.dur-ctrl button{width:28px; height:28px; border:none; border-radius:9px; background:var(--card);
+  color:var(--text); font-weight:800; font-size:1rem; cursor:pointer;}
+.dur-ctrl input{width:40px; text-align:center; border:none; background:transparent; color:var(--text);
+  font-size:1rem; font-weight:700; font-family:inherit;}
+.quote{font-style:italic; font-size:1rem; color:var(--sub); text-align:center; max-width:520px; margin:0 auto 26px;
+  line-height:1.4;}
+
+.daytitle{font-size:1.15rem; font-weight:800; margin:0 0 2px;}
+.daysub{color:var(--sub); font-size:.82rem; margin-bottom:16px;}
+.backlog-head{display:flex; align-items:center; gap:8px; font-size:.85rem; font-weight:800; color:var(--danger);
+  text-transform:uppercase; letter-spacing:.04em; margin:6px 0 10px;}
+
+.card{background:var(--card); border:1px solid var(--border); border-radius:18px; padding:16px;
+  margin-bottom:14px; box-shadow:var(--shadow-sm); display:flex; gap:14px; align-items:flex-start;
+  transition:box-shadow .2s ease, transform .2s ease;}
+.card:hover{box-shadow:var(--shadow); transform:translateY(-1px);}
+.card.done{background:var(--done-bg);}
+.card.backlog{border-left:4px solid var(--danger);}
+.chk{position:relative; flex-shrink:0; margin-top:2px;}
+.chk input{opacity:0; position:absolute; width:26px; height:26px; margin:0; cursor:pointer;}
+.chk .box{width:26px; height:26px; border-radius:9px; border:2px solid var(--accent); display:flex;
+  align-items:center; justify-content:center; background:var(--card); font-size:.9rem; color:#fff;}
+.chk input:checked ~ .box{background:var(--accent);}
+.cbody{flex:1;}
+.subj-pill{display:inline-block; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+  color:var(--accent); background:var(--chip); border-radius:8px; padding:2px 8px; margin-bottom:6px;}
+.rollover-tag{background:var(--danger); color:#fff; border-radius:8px; padding:2px 8px; font-size:.68rem; margin-left:6px;}
+.ttopic{font-size:.95rem; font-weight:600; margin:0 0 4px; line-height:1.3;}
+.ttopic.done{text-decoration:line-through; color:var(--sub); font-weight:500;}
+.meta-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+.tdur{font-size:.76rem; color:var(--sub);}
+.watch-btn{display:inline-flex; align-items:center; gap:6px; background:var(--accent2); color:#2b2311;
+  font-weight:700; font-size:.8rem; text-decoration:none; padding:7px 13px; border-radius:12px;}
+.watch-btn:hover{filter:brightness(1.06);}
+
+@media (max-width:760px){
+  .shell{flex-direction:column;}
+  nav.sidebar{width:100%; display:flex; overflow-x:auto; overflow-y:hidden; border-right:none;
+    border-bottom:1px solid var(--border); white-space:nowrap; padding:8px;}
+  .daytab{width:auto; margin-bottom:0; margin-right:6px; flex-shrink:0;}
+  .hero .time{font-size:3.4rem;}
+  .durations{gap:12px;}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>🩺 Bridge Course</h1>
+    <div class="tag">Pharma · Micro · Patho — Sep 25 → Oct 12</div>
+  </div>
+  <div class="headright">
+    <div class="mini-progress">
+      <div class="progress-wrap"><div class="progress-bar" id="bar"></div></div>
+      <div class="progress-num" id="progLabel">0/0</div>
+    </div>
+    <button class="iconbtn" id="themeBtn" title="Toggle theme">🌓</button>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main>
+    <div class="hero">
+      <div class="mode" id="pomoLabel">Focus</div>
+      <div class="time" id="pomoTime">50:00</div>
+      <div class="btns">
+        <button class="main-btn" id="pomoStart">Start</button>
+        <button class="alt-btn" id="pomoReset">Reset</button>
+      </div>
+      <div class="durations">
+        <div class="dur-ctrl">
+          <span class="dlabel">Work</span>
+          <button id="workMinus">−</button>
+          <input id="workMin" type="number" min="1" max="180" value="50">
+          <span class="dlabel">min</span>
+          <button id="workPlus">+</button>
+        </div>
+        <div class="dur-ctrl">
+          <span class="dlabel">Break</span>
+          <button id="breakMinus">−</button>
+          <input id="breakMin" type="number" min="1" max="60" value="10">
+          <span class="dlabel">min</span>
+          <button id="breakPlus">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="quote" id="quote"></div>
+    <div id="daycontent"></div>
+  </main>
+</div>
+
+<script>
+const YT = v => "https://www.youtube.com/watch?v=" + v;
+const schedule = [
+{d:1,date:"2026-09-25",label:"Sep 25",full:"Fri, Sep 25",subs:[
+  {n:"Pharmacology",t:"Strategy: How to Approach Pharmacology in Prof 2",u:YT("h3RYPJGk3cc"),dur:"1h"},
+  {n:"Microbiology",t:"General Microbiology E01 – Basics, Microscopy & Disinfection",u:YT("jPxKDpW6pKE"),dur:"2h15m"}]},
+{d:2,date:"2026-09-26",label:"Sep 26",full:"Sat, Sep 26",subs:[
+  {n:"Microbiology",t:"Basics of Microbiology – Bacterial Structure & Classification",u:YT("5dGKfOq5WKA"),dur:"2h15m"},
+  {n:"Pathology",t:"Cell Injury & Hemodynamics – Intro (MBBS 2nd Yr)",u:YT("mLXM3T7OuVM"),dur:"2h15m"}]},
+{d:3,date:"2026-09-27",label:"Sep 27",full:"Sun, Sep 27",subs:[
+  {n:"Pathology",t:"Cell Injury – Reversible vs Irreversible Injury",u:YT("VugDQPkuQDA"),dur:"2h15m"},
+  {n:"Pharmacology",t:"General Pharmacology Pt.1 – Intro & Routes of Administration",u:YT("Jpwf8NwrPeU"),dur:"2h15m"}]},
+{d:4,date:"2026-09-28",label:"Sep 28",full:"Mon, Sep 28",subs:[
+  {n:"Pharmacology",t:"General Pharmacology Pt.1 – Pharmacokinetics recap",u:YT("Jpwf8NwrPeU"),dur:"2h15m"},
+  {n:"Microbiology",t:"Stains in Microbiology – Gram/AFB Staining",u:YT("D87rK3MrLDo"),dur:"2h15m"}]},
+{d:5,date:"2026-09-29",label:"Sep 29",full:"Tue, Sep 29",subs:[
+  {n:"Microbiology",t:"Sterilization & Disinfection – recap",u:YT("jPxKDpW6pKE"),dur:"2h15m"},
+  {n:"Pathology",t:"Mechanisms of Cell Injury",u:YT("nRBH9gfaoz0"),dur:"2h15m"}]},
+{d:6,date:"2026-09-30",label:"Sep 30",full:"Wed, Sep 30",subs:[
+  {n:"Pathology",t:"MCQ Practice – Cell Injury Part 2",u:"https://www.youtube.com/live/OXfad3YesKM",dur:"2h15m"},
+  {n:"Pharmacology",t:"General Pharmacology Pt.2 – Pharmacodynamics & ADR",u:YT("qyLhH564YT0"),dur:"2h15m"}]},
+{d:7,date:"2026-10-01",label:"Oct 1",full:"Thu, Oct 1",subs:[
+  {n:"Pharmacology",t:"General Pharmacology Pt.2 – Dose-response & Drug Interactions recap",u:YT("qyLhH564YT0"),dur:"2h15m"},
+  {n:"Microbiology",t:"Complete Bacteriology E01 – Gram +/– Classification",u:YT("F0deN4qeO_k"),dur:"2h15m"}]},
+{d:8,date:"2026-10-02",label:"Oct 2",full:"Fri, Oct 2",subs:[
+  {n:"Microbiology",t:"Bacterial Genetics – Active Recall + diagrams (your notes)",u:"",dur:"2h15m"},
+  {n:"Pathology",t:"Chronic Inflammation",u:YT("6zG_RHz6XcQ"),dur:"2h15m"}]},
+{d:9,date:"2026-10-03",label:"Oct 3",full:"Sat, Oct 3",subs:[
+  {n:"Pathology",t:"Active Recall – Cell Injury + Inflammation flowchart (your notes)",u:"",dur:"2h15m"},
+  {n:"Pharmacology",t:"FARRE Series – General Pharmacology (alt. explanation)",u:YT("idh3i9Xy9as"),dur:"2h15m"}]},
+{d:10,date:"2026-10-04",label:"Oct 4",full:"Sun, Oct 4",subs:[
+  {n:"Pharmacology",t:"Active Recall – Flashcards on Pharmacokinetics/Pharmacodynamics",u:"",dur:"2h15m"},
+  {n:"Microbiology",t:"Self-quiz – Microscopy, Staining & Sterilization",u:"",dur:"2h15m"}]},
+{d:11,date:"2026-10-05",label:"Oct 5",full:"Mon, Oct 5",subs:[
+  {n:"Microbiology",t:"General Microbiology in One Shot – Full Revision",u:YT("AWnTlH5Dulc"),dur:"2h15m"},
+  {n:"Pathology",t:"Self-quiz – Cell Injury & Inflammation",u:"",dur:"2h15m"}]},
+{d:12,date:"2026-10-06",label:"Oct 6",full:"Tue, Oct 6",subs:[
+  {n:"Pathology",t:"Pathology LRR Part 1 – High-yield Revision",u:YT("GoOCVPEZ1Gw"),dur:"2h15m"},
+  {n:"Pharmacology",t:"Pharmacology LRR Part 1 – Rapid Revision",u:YT("g4aFKCz7FV0"),dur:"2h15m"}]},
+{d:13,date:"2026-10-07",label:"Oct 7",full:"Wed, Oct 7",subs:[
+  {n:"Pharmacology",t:"Pharmacology LRR Part 2 – Rapid Revision",u:YT("e4BSg4s1R8c"),dur:"2h15m"},
+  {n:"Microbiology",t:"MCQ Practice – General Microbiology",u:"",dur:"2h15m"}]},
+{d:14,date:"2026-10-08",label:"Oct 8",full:"Thu, Oct 8",subs:[
+  {n:"Microbiology",t:"Weak-topic Review – rewatch your toughest video",u:"",dur:"2h15m"},
+  {n:"Pathology",t:"MCQ Practice – General Pathology",u:"",dur:"2h15m"}]},
+{d:15,date:"2026-10-09",label:"Oct 9",full:"Fri, Oct 9",subs:[
+  {n:"Pathology",t:"Weak-topic Review – rewatch your toughest video",u:"",dur:"2h15m"},
+  {n:"Pharmacology",t:"MCQ Practice – General Pharmacology",u:"",dur:"2h15m"}]},
+{d:16,date:"2026-10-10",label:"Oct 10",full:"Sat, Oct 10",subs:[
+  {n:"Pharmacology",t:"Weak-topic Review – rewatch your toughest video",u:"",dur:"2h15m"},
+  {n:"Microbiology",t:"Rewatch toughest video / clear doubts",u:"",dur:"2h15m"}]},
+{d:17,date:"2026-10-11",label:"Oct 11",full:"Sun, Oct 11",subs:[
+  {n:"Microbiology",t:"Final Recap – One Shot skim + confidence check",u:YT("AWnTlH5Dulc"),dur:"2h"},
+  {n:"Pathology",t:"Rewatch toughest concept",u:"",dur:"2h"}]},
+{d:18,date:"2026-10-12",label:"Oct 12",full:"Mon, Oct 12",subs:[
+  {n:"Pathology",t:"Final Recap – skim notes + confidence check",u:"",dur:"2h"},
+  {n:"Pharmacology",t:"Final Recap – skim notes + confidence check",u:"",dur:"2h"}]}
+];
+
+const quotes = [
+"You don't need to know everything by tomorrow — just a little more than yesterday.",
+"A 'chill' bridge course beats a burnt-out one. Consistency wins over intensity.",
+"Every topic you check off today is one less surprise on day one of 2nd year.",
+"Rest is part of the schedule too. Tired brains don't retain pharmacology.",
+"You're not behind. You're early. Be proud of that.",
+"Small daily reps in patho, micro and pharma compound faster than you think.",
+"It's okay to rewatch a video twice. Understanding beats speed.",
+"Two subjects a day, done gently, is a full head start by October 12th.",
+"Medicine is a marathon — this bridge course is just a warm lap, not a sprint.",
+"You showed up today. That's the whole job."
+];
+
+const LS = { get:(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}},
+  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}} };
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function taskId(d,idx){ return "d"+d+"_s"+idx; }
+
+// --- Auto-open today's tab on load ---
+const TODAY = todayStr();
+const todayMatch = schedule.find(d=>d.date===TODAY);
+let activeDay = todayMatch ? todayMatch.d : schedule[0].d;
+
+function renderSidebar(){
+  const sb = document.getElementById("sidebar");
+  sb.innerHTML = "";
+  schedule.forEach(day=>{
+    const btn = document.createElement("button");
+    btn.className = "daytab" + (day.d===activeDay ? " active":"");
+    btn.innerHTML = `<span>Day ${day.d} · ${day.label}</span>${day.date===TODAY?'<span>📍</span>':''}`;
+    btn.onclick = ()=>{ activeDay = day.d; renderAll(); };
+    sb.appendChild(btn);
+  });
+}
+
+function cardHtml(id, s, isDone, tag, isBacklog){
+  return `<div class="card${isDone?' done':''}${isBacklog?' backlog':''}">
+    <label class="chk">
+      <input type="checkbox" ${isDone?'checked':''} onchange="toggle('${id}')">
+      <span class="box">${isDone?'✓':''}</span>
+    </label>
+    <div class="cbody">
+      <span class="subj-pill">${s.n}</span>${tag?`<span class="rollover-tag">${tag}</span>`:''}
+      <p class="ttopic${isDone?' done':''}">${s.t}</p>
+      <div class="meta-row">
+        ${s.u?`<a class="watch-btn" href="${s.u}" target="_blank" rel="noopener">▶ Watch Lecture</a>`:''}
+        <span class="tdur">${s.dur}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderDayContent(){
+  const done = LS.get("bct_done", {});
+  const day = schedule.find(d=>d.d===activeDay);
+  const el = document.getElementById("daycontent");
+  let html = `<div class="daytitle">Day ${day.d} — ${day.full}</div><div class="daysub">${day.date===TODAY?'📍 Today':(day.date<TODAY?'Past day':'Upcoming')}</div>`;
+
+  if(day.date === TODAY){
+    const backlog = [];
+    schedule.filter(d=>d.date<TODAY).forEach(pd=>{
+      pd.subs.forEach((s,idx)=>{
+        const id = taskId(pd.d, idx);
+        if(!done[id]) backlog.push({id, s, from:pd.d});
+      });
+    });
+    if(backlog.length){
+      html += `<div class="backlog-head">🔥 Backlog — Missed Tasks (${backlog.length})</div>`;
+      backlog.forEach(b=>{ html += cardHtml(b.id, b.s, false, `from Day ${b.from}`, true); });
+      html += `<div class="daytitle" style="margin-top:20px;font-size:1rem;">Today's Plan</div>`;
+    }
+  }
+
+  day.subs.forEach((s,idx)=>{
+    const id = taskId(day.d, idx);
+    html += cardHtml(id, s, !!done[id], null, false);
+  });
+
+  el.innerHTML = html;
+}
+
+function updateProgress(){
+  const done = LS.get("bct_done", {});
+  let total=0, cnt=0;
+  schedule.forEach(day=>day.subs.forEach((s,idx)=>{ total++; if(done[taskId(day.d,idx)]) cnt++; }));
+  document.getElementById("bar").style.width = total? (cnt/total*100)+"%":"0%";
+  document.getElementById("progLabel").textContent = `${cnt}/${total}`;
+}
+
+function renderAll(){ renderSidebar(); renderDayContent(); updateProgress(); }
+
+function toggle(id){
+  const done = LS.get("bct_done", {});
+  done[id] = !done[id];
+  LS.set("bct_done", done);
+  renderAll();
+}
+window.toggle = toggle;
+
+function setQuote(){
+  const idx = new Date().getDate() % quotes.length;
+  document.getElementById("quote").textContent = "“" + quotes[idx] + "”";
+}
+
+// Theme
+function applyTheme(t){
+  if(t) document.documentElement.setAttribute("data-theme", t);
+  else document.documentElement.removeAttribute("data-theme");
+}
+document.getElementById("themeBtn").onclick = ()=>{
+  const cur = LS.get("bct_theme", null);
+  const next = cur === "dark" ? "light" : (cur === "light" ? null : "dark");
+  LS.set("bct_theme", next);
+  applyTheme(next);
+};
+applyTheme(LS.get("bct_theme", null));
+
+// --- Pomodoro with adjustable durations ---
+let pomo = LS.get("bct_pomo", {mode:"work", secs:50*60, running:false, workMin:50, breakMin:10});
+let pomoInterval = null;
+function fmt(s){ const m=Math.floor(s/60), sec=s%60; return String(m).padStart(2,'0')+":"+String(sec).padStart(2,'0'); }
+function updatePomoUI(){
+  document.getElementById("pomoTime").textContent = fmt(pomo.secs);
+  document.getElementById("pomoLabel").textContent = pomo.mode === "work" ? `Focus (${pomo.workMin}m)` : `Break (${pomo.breakMin}m)`;
+  document.getElementById("pomoStart").textContent = pomo.running ? "Pause" : "Start";
+  document.getElementById("workMin").value = pomo.workMin;
+  document.getElementById("breakMin").value = pomo.breakMin;
+}
+function tick(){
+  pomo.secs--;
+  if(pomo.secs < 0){
+    pomo.mode = pomo.mode === "work" ? "break" : "work";
+    pomo.secs = (pomo.mode === "work" ? pomo.workMin : pomo.breakMin) * 60;
+  }
+  LS.set("bct_pomo", pomo);
+  updatePomoUI();
+}
+document.getElementById("pomoStart").onclick = ()=>{
+  pomo.running = !pomo.running;
+  if(pomo.running){ pomoInterval = setInterval(tick, 1000); }
+  else { clearInterval(pomoInterval); }
+  LS.set("bct_pomo", pomo);
+  updatePomoUI();
+};
+document.getElementById("pomoReset").onclick = ()=>{
+  clearInterval(pomoInterval);
+  pomo.running = false;
+  pomo.mode = "work";
+  pomo.secs = pomo.workMin * 60;
+  LS.set("bct_pomo", pomo);
+  updatePomoUI();
+};
+function setDuration(kind, val){
+  val = Math.max(1, Math.min(kind==='work'?180:60, Math.round(val)||1));
+  if(kind==='work') pomo.workMin = val; else pomo.breakMin = val;
+  if(!pomo.running && pomo.mode===kind){ pomo.secs = val*60; }
+  LS.set("bct_pomo", pomo);
+  updatePomoUI();
+}
+document.getElementById("workMinus").onclick = ()=> setDuration('work', pomo.workMin-5);
+document.getElementById("workPlus").onclick  = ()=> setDuration('work', pomo.workMin+5);
+document.getElementById("breakMinus").onclick= ()=> setDuration('break', pomo.breakMin-1);
+document.getElementById("breakPlus").onclick = ()=> setDuration('break', pomo.breakMin+1);
+document.getElementById("workMin").onchange  = e => setDuration('work', parseInt(e.target.value,10));
+document.getElementById("breakMin").onchange = e => setDuration('break', parseInt(e.target.value,10));
+
+updatePomoUI();
+if(pomo.running){ pomoInterval = setInterval(tick, 1000); }
+
+setQuote();
+renderAll();
+</script>
+</body>
+</html>
